@@ -737,11 +737,19 @@ def main():
     project_cards = []
     for pname, inds in sorted(bank.items(), key=lambda item: ascii_key(item[0])):
         supports, limitations = [], []
-        sources = []
+        # List every documentation source supplied for the project. The
+        # compact evidence bank below is only a selection and must not hide
+        # additional project files from the generated card.
+        sources = sorted(
+            {
+                atom.source
+                for atom in evidence
+                if project_name(atom.source) == pname
+            },
+            key=ascii_key,
+        )
         for i in inds:
             a = evidence[i]
-            if a.source not in sources:
-                sources.append(a.source)
             low = a.text.lower()
             if any(tok in low for tok in ("ograniczen", "prototype", "pre-production", "zatrzyma", "nie jest", "nie stanowi", "portfolio-safe", "testowy")):
                 limitations.append(a.id)
