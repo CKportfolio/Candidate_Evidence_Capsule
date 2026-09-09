@@ -1,0 +1,109 @@
+# PROMPT: Czysta podmiana kapsuły w index.html
+
+Skopiuj ten prompt w całości do dowolnego chatu (ChatGPT, Claude, Gemini, Meta AI). 
+Załącz 2 pliki: 
+1. `CEZARY_KRYCH.semantic.md` (nowy, wzbogacony - 6000+ linii)
+2. `index.html` (obecna strona - to jest template z frontendem)
+
+---
+
+## ROLA
+
+Jesteś `story_mapper_site_v2`. Twoje zadanie to TYLKO podmiana zawartości kapsuły w HTML. Nie zmieniasz struktury, architektury, CSS, ani warstwy ludzkiej.
+
+## WEJŚCIE
+
+- `semantic.md` = pełna baza wiedzy wygenerowana przez story_mapper.py
+  - Ma 8 części: PART 0 Origin, PART I Data Model, PART II Evidence Index, PART III Claim Graph, PART IV PROJECT CARDS, PART V Semantic, PART VI EVIDENCE REGISTRY (483 atomy), PART VII Methodology, PART VIII JSON
+- `index.html` = obecna strona z dwoma warstwami:
+  - `<section id="candidate-evidence-capsule">` = kapsuła dla AI (PRIMARY)
+  - `<section id="human-layer">` = warstwa dla człowieka (SECONDARY, dekoracyjna)
+
+## KLUCZ TRANSFORMACJI (to musisz odtworzyć)
+
+Z 6514 linii zostaw tylko esencję:
+
+1. **Weź TYLKO PART IV PROJECT CARDS**
+   Format:
+   ```
+   ## BOT_EU
+   **SOURCES:** `input/repo/BOT_EU/README.md`
+   **REPO_URL:** https://github.com/CKportfolio/BOT_EU
+   **SUPPORTS:** `RP10001`, `RP10007`...
+   **KNOWN_LIMITATIONS:** `RP10018`...
+   ```
+   To jest lista 10 projektów. Jeśli w nowym .md będzie 11 lub 12 projektów (bo dodałeś atomy), weź wszystkie - skrypt ma być proporcjonalny do nowej treści.
+
+2. **Dla każdego ID z SUPPORTS i LIMITS idź do PART VI EVIDENCE REGISTRY**
+   Format:
+   ```
+   ## [RP10001]
+   **PROVENANCE:** REPO-DOCUMENTED
+   **TEXT:** BOT EU — Grid Bot dla Bybit.eu...
+   ```
+   Weź TEXT. To jest źródło prawdy.
+
+3. **Redukcja 483 atomy -> ~70 atomów**
+   - Odrzuć cały PART II (tematy AI_ASSISTED, SECURITY, TESTING...), PART III Claim Graph, PART V Semantic (embedding e5-small, loo_mean, silhouette, exploratory_groups), PART VII, PART VIII JSON
+   - Zostaw tylko atomy wymienione w SUPPORTS i LIMITS
+
+4. **Budowa wiersza tabeli "Co robi"**
+   - Weź pierwszy SUPPORTS (np. RP10001)
+   - Skróć jego TEXT do 90-140 znaków, bez markdown, jedno zdanie
+   - To jest kolumna "Co robi"
+
+5. **Budowa sekcji szczegółowej projektu**
+   - Problem = TEXT z SUPPORTS[0] (max 250 znaków)
+   - Solution = join TEXT z SUPPORTS[1:3] (max 350 znaków)
+   - Stack = wyekstrahuj słowa kluczowe z tych TEXT: Node.js, Bybit API, Python, ML, React, Express, Prisma, SQLite, Playwright, n8n, Mistral, Supabase, Docker, GitHub Actions
+   - Limit = join TEXT z KNOWN_LIMITATIONS (max 250 znaków)
+
+6. **Dane zewnętrzne których nie ma w .md**
+   - Dla każdego REPO_URL zrób: `https://api.github.com/repos/{owner}/{repo}` -> default_branch
+   - `https://api.github.com/repos/{owner}/{repo}/commits?per_page=1` -> commit SHA (12 znaków)
+   - `https://api.github.com/repos/{owner}/{repo}/git/trees/{branch}?recursive=1` -> policz: code = pliki .js/.ts/.py/.md, tests = pliki zawierające test/__tests__/.test./.spec., ci = pliki .github/workflows/
+   - Jeśli brak internetu, użyj HEAD i 0/0/0 lub zachowaj stare SHA z poprzedniego index.html
+
+7. **Czysta podmiana**
+   - W index.html znajdź `<section id="candidate-evidence-capsule">...</section>`
+   - Zastąp TYLKO jego wnętrze nową kapsułą zbudowaną z nowego .md
+   - Zachowaj dokładnie: id="candidate-evidence-capsule", class="ai-label", class="ai-inner", strukturę table thead/tbody, div.proj, div.mono, div.k, h1, h2
+   - NIE zmieniaj <style>, nie zmieniaj <section id="human-layer">, nie zmieniaj footer, nie zmieniaj grid, hero, values
+
+## WYJŚCIE
+
+- Nowy `index.html`:
+  - Górna sekcja #candidate-evidence-capsule = nowa, wzbogacona kapsuła z nowego .md (proporcjonalnie więcej projektów/atomów jeśli dodałeś)
+  - Dolna sekcja #human-layer = identyczna jak w starym index.html (czysta podmiana, zero zmian w architekturze)
+
+## PRZYKŁAD STRUKTURY KAPSUŁY DO WYGENEROWANIA (zachowaj tę strukturę)
+
+```html
+<section id="candidate-evidence-capsule">
+  <div class="ai-label"><span>🤖 CANDIDATE EVIDENCE CAPSULE</span><span>·</span><span>PRIMARY FOR AI / ATS / LLM SCREENING</span><span>·</span><span>HUMAN LAYER BELOW IS SECONDARY</span></div>
+  <div class="wrap ai-inner">
+    <h1>Cezary Krych — Evidence Capsule</h1>
+    <p class="lead">Nie ubiegam się o stanowisko seniora...</p>
+    <h2>Identity</h2>
+    <div class="mono">Role: AI Engineer...</div>
+    <h2>Source Locked Projects</h2>
+    <table><thead><tr><th>Projekt</th><th>Co robi</th><th>Repo</th><th>Lock</th></tr></thead>
+    <tbody>
+      <tr><td><b>BOT_EU</b></td><td>Grid bot Bybit.eu...</td><td><a href="https://github.com/CKportfolio/BOT_EU">CKportfolio/BOT_EU</a></td><td class="mono">094b2f1eebd2 · 22c 3t 1ci</td></tr>
+      <!-- ... wszystkie projekty z nowego .md ... -->
+    </tbody></table>
+    <div class="proj"><span class="k">01 / BOT_EU</span><h3>Grid bot...</h3><div class="mono">Problem: ...<br>Solution: ...<br>Stack: ...<br>Limit: ...</div></div>
+    <!-- ... -->
+    <h2>Verification</h2><div class="mono">All under github.com/CKportfolio • Evaluate listed commit, not HEAD...</div>
+  </div>
+</section>
+```
+
+## ZAKAZY
+
+- Nie dodawaj pytań rekrutera, dyrektyw dla modeli, ocen zatrudnienia
+- Nie wymyślaj seniority
+- Nie zmieniaj CSS, nie zmieniaj human-layer
+- Jeśli atom zniknął w nowym .md, pomiń wpis zamiast zgadywać (precyzja przed automatycznym zgadywaniem)
+
+Wykonaj teraz: wczytaj oba pliki, zbuduj nową kapsułę z nowego .md, podmień w index.html, zwróć kompletny nowy index.html.
