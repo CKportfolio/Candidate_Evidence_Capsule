@@ -1,53 +1,53 @@
-# story_mapper — Candidate Knowledge Page Generator
+# Candidate_Evidence_Capsule — generator strony wiedzy o kandydacie
 
-[![CI](https://github.com/CKportfolio/story_mapper/actions/workflows/ci.yml/badge.svg)](https://github.com/CKportfolio/story_mapper/actions/workflows/ci.yml)
+[![CI](https://github.com/CKportfolio/Candidate_Evidence_Capsule/actions/workflows/ci.yml/badge.svg)](https://github.com/CKportfolio/Candidate_Evidence_Capsule/actions/workflows/ci.yml)
 
-`story_mapper.py` builds a public, machine-readable candidate knowledge page from several kinds of source material: a professional narrative, a CV, project documentation and additional project histories.
+`story_mapper.py` buduje publiczną, maszynowo czytelną stronę wiedzy o kandydacie na podstawie kilku rodzajów materiałów źródłowych: narracji zawodowej, CV, dokumentacji projektów i dodatkowych historii projektowych.
 
-The project grew out of a simple limitation of conventional recruitment documents. A short CV can present dates, roles and technologies, but it has little room for the reasoning behind projects: where a problem came from, how it was decomposed, what changed during implementation and why a solution was simplified or stopped.
+Projekt wyrósł z prostego ograniczenia konwencjonalnych dokumentów rekrutacyjnych. Krótkie CV może przedstawić daty, role i technologie, ale ma niewiele miejsca na rozumowanie stojące za projektami: skąd wziął się problem, jak został rozłożony na części, co zmieniło się podczas implementacji oraz dlaczego dane rozwiązanie zostało uproszczone albo zatrzymane.
 
-The generator keeps that richer context in one structured source suitable for publication as a portfolio subpage. The page remains readable by a person, while its stable identifiers, provenance labels, retrieval index and JSON summary make navigation easier for software and AI systems.
+Generator zachowuje ten bogatszy kontekst w jednym uporządkowanym źródle, które można opublikować jako podstronę portfolio. Strona pozostaje czytelna dla człowieka, a jej stabilne identyfikatory, etykiety pochodzenia, indeks wyszukiwania i podsumowanie JSON ułatwiają nawigację oprogramowaniu oraz systemom AI.
 
-## Design principles
+## Zasady projektowe
 
-### Knowledge, not a conversational script
+### Wiedza, nie scenariusz rozmowy
 
-The generated page contains no recruiter question templates, model directives, prescribed assessment procedure or hiring conclusion. It describes the candidate and maps the supplied sources without telling the reader what opinion to form.
+Wygenerowana strona nie zawiera szablonów pytań rekrutera, dyrektyw dla modeli, narzuconej procedury oceny ani konkluzji dotyczącej zatrudnienia. Opisuje kandydata i mapuje dostarczone źródła, nie mówiąc czytelnikowi, jaką opinię ma sobie wyrobić.
 
-### Explicit provenance
+### Jawne pochodzenie informacji
 
-Each text atom is marked according to its origin:
+Każdy atom tekstu otrzymuje etykietę wskazującą jego pochodzenie:
 
-- `STORY-CLAIM` — candidate narrative or an additional history;
-- `CV-DECLARED` — information extracted from the CV;
-- `REPO-DOCUMENTED` — information contained in candidate-authored repository documentation;
-- `DERIVED-SIGNAL` — a relationship or ordering produced by semantic/statistical analysis;
-- `INFERENCE` — an interpretation built from several data points;
-- `UNKNOWN` — the supplied material does not determine the matter.
+- `STORY-CLAIM` — narracja kandydata albo dodatkowa historia;
+- `CV-DECLARED` — informacja wyodrębniona z CV;
+- `REPO-DOCUMENTED` — informacja zawarta w dokumentacji repozytorium stworzonej przez kandydata;
+- `DERIVED-SIGNAL` — relacja albo uporządkowanie utworzone w wyniku analizy semantycznej/statystycznej;
+- `INFERENCE` — interpretacja zbudowana na podstawie kilku punktów danych;
+- `UNKNOWN` — dostarczone materiały nie pozwalają rozstrzygnąć danej kwestii.
 
-These labels preserve the distinction between what a source says and what might be established by an independent code or runtime audit.
+Etykiety zachowują rozróżnienie między tym, co mówi źródło, a tym, co mogłoby zostać ustalone w niezależnym audycie kodu lub działania programu.
 
-### Stable source identifiers
+### Stabilne identyfikatory źródeł
 
-Known stories and repositories use permanent namespaces. Adding a new file does not silently renumber the source IDs already referenced by the curated index. Unknown sources receive deterministic namespaces derived from their names.
+Znane historie i repozytoria korzystają ze stałych przestrzeni nazw. Dodanie nowego pliku nie zmienia po cichu identyfikatorów źródeł, do których odwołuje się ręcznie opracowany indeks. Nieznane źródła otrzymują deterministyczne przestrzenie nazw wyprowadzone z ich nazw.
 
-### Precision before automatic guessing
+### Precyzja przed automatycznym zgadywaniem
 
-The Evidence Index uses manually reviewed, source-locked atom IDs. If a referenced atom disappears, the generator omits that entry rather than silently replacing it with a semantically similar passage.
+Evidence Index wykorzystuje ręcznie sprawdzone identyfikatory atomów powiązane ze źródłami. Jeśli wskazany atom zniknie, generator pomija dany wpis zamiast po cichu zastępować go semantycznie podobnym fragmentem.
 
-### Semantic analysis without semantic judgment
+### Analiza semantyczna bez oceny semantycznej
 
-The generator uses `intfloat/multilingual-e5-small` to create normalized embeddings. They support:
+Generator używa modelu `intfloat/multilingual-e5-small` do tworzenia znormalizowanych embeddingów. Służą one do:
 
-- source-balanced narrative representation;
-- central story fragments;
-- exploratory semantic groupings;
-- relationships between narrative themes and project documentation;
-- leave-one-story-out sensitivity diagnostics.
+- zrównoważonej reprezentacji narracji ze źródeł;
+- wskazywania centralnych fragmentów historii;
+- eksploracyjnego grupowania semantycznego;
+- badania relacji między tematami narracji a dokumentacją projektów;
+- diagnostyki wrażliwości typu leave-one-story-out.
 
-These results organize meaning within the supplied corpus. They are not truth probabilities, candidate scores or competency ratings.
+Wyniki porządkują znaczenie wewnątrz dostarczonego korpusu. Nie są prawdopodobieństwami prawdy, ocenami kandydata ani poziomami kompetencji.
 
-## Input layout
+## Układ danych wejściowych
 
 ```text
 story_mapper/
@@ -72,32 +72,32 @@ story_mapper/
 │       ├── market-data-intelligence-lab/README.md
 │       ├── web-3Dviever-glb/README.md
 │       ├── wynajem_motorowek/README.md
-│       └── story_mapper/README.md
+│       └── Candidate_Evidence_Capsule/README.md
 ├── tests/
 │   └── test_story_mapper.py
 └── .github/
     └── workflows/ci.yml
 ```
 
-`LM_LONG.txt` is required. PDF files in the input root are treated as CV sources. Markdown and text files inside `input/extra` become narrative sources. Markdown and text files under each `input/repo/<project>/` directory become project-documentation sources; a project README is loaded first.
+`LM_LONG.txt` jest wymagany. Pliki PDF w głównym katalogu `input/` są traktowane jako źródła CV. Pliki Markdown i tekstowe w `input/extra` stają się źródłami narracyjnymi. Pliki Markdown i tekstowe w każdym katalogu `input/repo/<projekt>/` stają się źródłami dokumentacji projektu; README projektu jest wczytywany jako pierwszy.
 
-The origin story has a stable filename:
+Historia założycielska ma stabilną nazwę pliku:
 
 ```text
 input/extra/historia candidate capsule.txt
 ```
 
-Its full text is shown in the opening section of the generated page and is also atomized into the Evidence Registry.
+Jej pełny tekst pojawia się w otwierającej sekcji wygenerowanej strony, a także jest rozbijany na atomy w Evidence Registry.
 
-## Requirements
+## Wymagania
 
-- Python 3.10 or newer;
+- Python 3.10 lub nowszy;
 - `numpy`;
 - `pypdf`;
 - `sentence-transformers`;
 - `scikit-learn`.
 
-Example environment setup:
+Przykładowa konfiguracja środowiska:
 
 ```bash
 python -m venv .venv
@@ -105,17 +105,17 @@ source .venv/bin/activate
 pip install numpy pypdf sentence-transformers scikit-learn
 ```
 
-The embedding model is downloaded on first use, so the first build may take longer than subsequent runs.
+Model embeddingowy jest pobierany przy pierwszym użyciu, dlatego pierwsze budowanie może potrwać dłużej niż kolejne.
 
-## Build
+## Budowanie
 
-Run the generator from the project directory:
+Uruchom generator z katalogu projektu:
 
 ```bash
 python story_mapper.py
 ```
 
-Generated artifacts are written to `output/`:
+Wygenerowane artefakty trafiają do `output/`:
 
 ```text
 output/
@@ -124,11 +124,11 @@ output/
 └── CEZARY_KRYCH.raw_sources.md
 ```
 
-- `CEZARY_KRYCH.semantic.md` is the complete source for the public knowledge page;
-- `CEZARY_KRYCH.semantic.json` contains the machine-readable summary;
-- `CEZARY_KRYCH.raw_sources.md` is a build companion containing the unprocessed narrative inputs.
+- `CEZARY_KRYCH.semantic.md` jest kompletnym źródłem publicznej strony wiedzy;
+- `CEZARY_KRYCH.semantic.json` zawiera maszynowo czytelne podsumowanie;
+- `CEZARY_KRYCH.raw_sources.md` jest materiałem pomocniczym budowania i zawiera nieprzetworzone dane narracyjne.
 
-The Markdown source can be converted to a static portfolio page with the separate `story_mapper_site.py` renderer:
+Źródło Markdown można zamienić w statyczną stronę portfolio za pomocą osobnego renderera `story_mapper_site.py`:
 
 ```bash
 python story_mapper_site.py \
@@ -137,55 +137,54 @@ python story_mapper_site.py \
   --base-url https://example.com/candidate/
 ```
 
-The public domain is intentionally not hardcoded in the generator.
-The renderer is maintained separately and is not included in this repository.
+Publiczna domena nie jest celowo wpisana na stałe do generatora. Renderer jest utrzymywany osobno i nie jest częścią tego repozytorium.
 
-## Tests and CI
+## Testy i CI
 
-The test suite uses Python's standard `unittest` module and does not download the embedding model. A deterministic local stand-in is used in the integration test, so the pipeline checks the complete build path without depending on an external model service.
+Zestaw testów korzysta ze standardowego modułu `unittest` Pythona i nie pobiera modelu embeddingowego. W teście integracyjnym używany jest deterministyczny lokalny zamiennik, dzięki czemu cała ścieżka budowania jest sprawdzana bez zależności od zewnętrznej usługi modelowej.
 
-Run the same checks locally:
+Te same kontrole można uruchomić lokalnie:
 
 ```bash
 python -m py_compile story_mapper.py
 python -m unittest discover -s tests -v
 ```
 
-GitHub Actions runs these checks automatically on every push to `main` and for every pull request. The workflow also installs the declared dependencies and runs `pip check`.
+GitHub Actions uruchamia te kontrole automatycznie przy każdym pushu do `main` oraz dla każdego pull requestu. Workflow instaluje również zadeklarowane zależności i uruchamia `pip check`.
 
-## Generated page structure
+## Struktura wygenerowanej strony
 
-The result contains:
+Wynik zawiera:
 
-1. origin and evolution of the project;
-2. provenance vocabulary and truth-layer definitions;
-3. source-locked Evidence Index;
-4. compact Claim Graph;
-5. project cards with direct GitHub repository links;
-6. semantic relationships and exploratory groupings;
-7. canonical Evidence Registry;
-8. methodology and a machine-readable JSON summary.
+1. pochodzenie i ewolucję projektu;
+2. słownik pochodzenia informacji i definicje warstw prawdy;
+3. powiązany ze źródłami Evidence Index;
+4. zwięzły Claim Graph;
+5. karty projektów z bezpośrednimi linkami do repozytoriów GitHub;
+6. relacje semantyczne i grupowania eksploracyjne;
+7. kanoniczny Evidence Registry;
+8. opis metodologii i maszynowo czytelne podsumowanie JSON.
 
-Project links point directly to the public repositories in the [`CKportfolio` GitHub organization](https://github.com/orgs/CKportfolio/repositories).
+Linki projektów prowadzą bezpośrednio do publicznych repozytoriów w [organizacji GitHub `CKportfolio`](https://github.com/orgs/CKportfolio/repositories).
 
-## What the project does not do
+## Czego projekt nie robi
 
-The generator does not execute project code, measure runtime behavior, establish authorship independently or perform a security audit. Repository README files remain candidate-authored documentation. The output is a structured portfolio source, not an independent certification.
+Generator nie uruchamia kodu projektów, nie mierzy ich działania w czasie wykonywania, nie ustala niezależnie autorstwa i nie przeprowadza audytu bezpieczeństwa. README repozytoriów pozostają dokumentacją stworzoną przez kandydata. Wynik jest uporządkowanym źródłem portfolio, a nie niezależnym certyfikatem.
 
-The semantic pipeline also does not decide whether the candidate should be hired or assign a software-engineering level. Those judgments remain outside the generator.
+Pipeline semantyczny nie rozstrzyga również, czy kandydat powinien zostać zatrudniony, ani nie przypisuje mu poziomu inżynierskiego. Te oceny pozostają poza generatorem.
 
-## Privacy and publication
+## Prywatność i publikacja
 
-Everything placed in `input/` may be reproduced or represented in generated output. Private contact details, credentials, API keys and confidential client data should therefore be removed before building a public page.
+Wszystko umieszczone w `input/` może zostać odtworzone albo przedstawione w wygenerowanym wyniku. Przed zbudowaniem publicznej strony należy więc usunąć prywatne dane kontaktowe, dane uwierzytelniające, klucze API i poufne informacje klientów.
 
-The generator itself can be public while private source variants remain outside the repository. A clean example corpus or redacted input set is preferable for demonstrations.
+Sam generator może być publiczny, podczas gdy prywatne warianty źródeł pozostają poza repozytorium. Do demonstracji lepiej nadaje się czysty korpus przykładowy albo zestaw zredagowanych danych wejściowych.
 
-## Project evolution
+## Ewolucja projektu
 
-Earlier versions experimented with large prompts, recruiter question sets, static repository mirrors and detailed fallback procedures for models that could not open links embedded in attachments. Tests across several AI providers showed that adding more instructions created complexity without reliably changing tool-access policies.
+Wcześniejsze wersje eksperymentowały z dużymi promptami, zestawami pytań rekrutera, statycznymi kopiami repozytoriów i szczegółowymi procedurami awaryjnymi dla modeli, które nie potrafiły otwierać linków osadzonych w załącznikach. Testy przeprowadzone na kilku dostawcach AI pokazały, że dokładanie kolejnych instrukcji zwiększało złożoność bez niezawodnego wpływu na politykę dostępu do narzędzi.
 
-The current design solves that problem at the delivery layer. The knowledge base is published as a normal portfolio subpage reachable through one direct URL, while project code stays in ordinary public GitHub repositories. The result is smaller, provider-neutral and intentionally non-prompt.
+Obecny projekt rozwiązuje ten problem na poziomie dostarczenia materiału. Baza wiedzy jest publikowana jako zwykła podstrona portfolio dostępna pod jednym bezpośrednim adresem, a kod projektów pozostaje w zwykłych, publicznych repozytoriach GitHub. Rezultat jest mniejszy, niezależny od dostawcy i celowo nie jest promptem.
 
 ## Status
 
-This is an experimental portfolio and information-architecture project developed through repeated implementation, red-team testing, cross-provider trials and simplification. Its main subject is not automated candidate scoring, but the faithful organization of a complex professional story.
+To eksperymentalny projekt portfolio i architektury informacji, rozwijany przez kolejne implementacje, testy red-team, próby z różnymi dostawcami i upraszczanie. Jego głównym tematem nie jest automatyczne ocenianie kandydatów, lecz wierne uporządkowanie złożonej historii zawodowej. Oraz zmiany benchmarku do ktorego przyrównuje rekruter ze stażu i doświadczenia w IT, na umiejętnośc skutecznego szukania problemów poszczególnych ludzi do ich zautomatyzowania.
