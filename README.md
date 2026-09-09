@@ -1,239 +1,251 @@
-# Candidate_Evidence_Capsule — generator strony wiedzy o kandydacie
+Candidate Evidence Capsule
 
-[![CI](https://github.com/CKportfolio/Candidate_Evidence_Capsule/actions/workflows/ci.yml/badge.svg)](https://github.com/CKportfolio/Candidate_Evidence_Capsule/actions/workflows/ci.yml)
+AI-czytelna warstwa portfolio, która pozwala modelowi językowemu analizować kandydaturę na podstawie uporządkowanych historii, opisów projektów, ograniczeń i odsyłaczy do kodu.
 
-`story_mapper.py` buduje publiczną, maszynowo czytelną stronę wiedzy o kandydacie na podstawie kilku rodzajów materiałów źródłowych: narracji zawodowej, CV, dokumentacji projektów i dodatkowych historii projektowych.
+To repozytorium nie zawiera generatora story_mapper.py. Jego głównym artefaktem jest prompt, który przenosi aktualną kapsułę z pliku Markdown do istniejącej strony HTML, nie przebudowując jej warstwy przeznaczonej dla człowieka.
 
-Projekt wyrósł z prostego ograniczenia konwencjonalnych dokumentów rekrutacyjnych. Krótkie CV może przedstawić daty, role i technologie, ale ma niewiele miejsca na rozumowanie stojące za projektami: skąd wziął się problem, jak został rozłożony na części, co zmieniło się podczas implementacji oraz dlaczego dane rozwiązanie zostało uproszczone albo zatrzymane.
+W skrócie
 
-Generator zachowuje ten bogatszy kontekst w jednym uporządkowanym źródle, które można opublikować jako podstronę portfolio. Strona pozostaje czytelna dla człowieka, a jej stabilne identyfikatory, etykiety pochodzenia, indeks wyszukiwania i podsumowanie JSON ułatwiają nawigację oprogramowaniu oraz systemom AI.
+Candidate Evidence Capsule jest czymś pomiędzy rozszerzonym CV, indeksem dowodów i maszynowo czytelną dokumentacją portfolio. Rekruter może wkleić adres opublikowanej strony do chata AI z dostępem do internetu i zapytać na przykład:
 
-## Zasady projektowe
+które projekty najlepiej pokazują sposób myślenia kandydata;
 
-### Wiedza, nie scenariusz rozmowy
+co wynika z kodu i dokumentacji, a co pozostaje deklaracją autora;
 
-Wygenerowana strona nie zawiera szablonów pytań rekrutera, dyrektyw dla modeli, narzuconej procedury oceny ani konkluzji dotyczącej zatrudnienia. Opisuje kandydata i mapuje dostarczone źródła, nie mówiąc czytelnikowi, jaką opinię ma sobie wyrobić.
+jakie problemy kandydat rozwiązywał i dlaczego wybierał określone rozwiązania;
 
-### Jawne pochodzenie informacji
+jakie są ograniczenia, niedokończone elementy i obszary wymagające dalszej weryfikacji.
 
-Każdy atom tekstu otrzymuje etykietę wskazującą jego pochodzenie:
+Kapsuła nie wydaje werdyktu rekrutacyjnego. Dostarcza modelowi lepiej uporządkowany materiał do samodzielnej analizy.
 
-- `STORY-CLAIM` — narracja kandydata albo dodatkowa historia;
-- `CV-DECLARED` — informacja wyodrębniona z CV;
-- `REPO-DOCUMENTED` — informacja zawarta w dokumentacji repozytorium stworzonej przez kandydata;
-- `DERIVED-SIGNAL` — relacja albo uporządkowanie utworzone w wyniku analizy semantycznej/statystycznej;
-- `INFERENCE` — interpretacja zbudowana na podstawie kilku punktów danych;
-- `UNKNOWN` — dostarczone materiały nie pozwalają rozstrzygnąć danej kwestii.
+Skąd wziął się ten pomysł
 
-Etykiety zachowują rozróżnienie między tym, co mówi źródło, a tym, co mogłoby zostać ustalone w niezależnym audycie kodu lub działania programu.
+Autor zetknął się z prostym problemem: klasyczne CV nie dawało mu wystarczającego pola, aby pokazać sposób rozpoznawania problemów, dochodzenia do rozwiązań i budowania narzędzi z pomocą AI. Skoro takiego pola nie było, stworzył je sam — opracował własny format autoprezentacji przeznaczony jednocześnie dla człowieka i modelu językowego.
 
-### Stabilne identyfikatory źródeł
+Nie był to format odtworzony z przeczytanego opisu ani gotowego poradnika. Powstał jako autorska koncepcja rozwijana z AI asystującym w analizie, redakcji i implementacji.
 
-Znane historie i repozytoria korzystają ze stałych przestrzeni nazw. Dodanie nowego pliku nie zmienia po cichu identyfikatorów źródeł, do których odwołuje się ręcznie opracowany indeks. Nieznane źródła otrzymują deterministyczne przestrzenie nazw wyprowadzone z ich nazw.
+Technicznym punktem wyjścia były doświadczenia zdobyte podczas projektowania systemu filtracji treści dla znajdującej się w portfolio StreszCzarki. Mechanizm ten ostatecznie nie wszedł do finalnej wersji programu, ale pozostała po nim wiedza o wektoryzacji tekstu, embeddingach i semantycznym porządkowaniu treści. Ta wiedza została później wykorzystana przy budowie źródłowej kapsuły kandydata.
 
-### Precyzja przed automatycznym zgadywaniem
+Czym kapsuła jest — a czym nie jest
 
-Evidence Index wykorzystuje ręcznie sprawdzone identyfikatory atomów powiązane ze źródłami. Jeśli wskazany atom zniknie, generator pomija dany wpis zamiast po cichu zastępować go semantycznie podobnym fragmentem.
+Kapsuła jest statyczną warstwą wiedzy osadzoną w stronie portfolio. Zawiera wybrane informacje, które pomagają modelowi odnaleźć i połączyć:
 
-### Analiza semantyczna bez oceny semantycznej
+tło zawodowe autora;
 
-Generator używa modelu `intfloat/multilingual-e5-small` do tworzenia znormalizowanych embeddingów. Służą one do:
+historię powstawania projektów;
 
-- zrównoważonej reprezentacji narracji ze źródeł;
-- wskazywania centralnych fragmentów historii;
-- eksploracyjnego grupowania semantycznego;
-- badania relacji między tematami narracji a dokumentacją projektów;
-- diagnostyki wrażliwości typu leave-one-story-out.
+problem, rozwiązanie, użyty stack i status każdego projektu;
 
-Wyniki porządkują znaczenie wewnątrz dostarczonego korpusu. Nie są prawdopodobieństwami prawdy, ocenami kandydata ani poziomami kompetencji.
+znane ograniczenia i świadome punkty zatrzymania;
 
-## Układ danych wejściowych
+bezpośrednie linki do repozytoriów;
 
-```text
-story_mapper/
-├── story_mapper.py
-├── PROMPT_CAPSULE_REPLACEMENT.md
-├── requirements.txt
-├── input/
-│   ├── LM_LONG.txt
-│   ├── candidate_cv.pdf
-│   ├── extra/
-│   │   ├── historia pierwszych automatyzacji.txt
-│   │   ├── ml bot history.txt
-│   │   ├── program do wprowadzania zlecen.txt
-│   │   ├── plyciarz history.txt
-│   │   └── historia candidate capsule.txt
-│   └── repo/
-│       ├── BOT_EU/README.md
-│       ├── Demand-Radar/README.md
-│       ├── MAG-AS/README.md
-│       ├── PiTcA/README.md
-│       ├── StreszCzarka---Krypto-AI-news-serwis/README.md
-│       ├── Zonda-Kalkulator-PITolenia-/README.md
-│       ├── market-data-intelligence-lab/README.md
-│       ├── web-3Dviever-glb/README.md
-│       ├── wynajem_motorowek/README.md
-│       └── Candidate_Evidence_Capsule/README.md
-├── tests/
-│   └── test_story_mapper.py
-└── .github/
-    └── workflows/ci.yml
-```
+identyfikatory commitów lub inne dane pozwalające wskazać analizowany stan repozytorium, jeżeli są dostępne.
 
-`LM_LONG.txt` jest wymagany. Pliki PDF w głównym katalogu `input/` są traktowane jako źródła CV. Pliki Markdown i tekstowe w `input/extra` stają się źródłami narracyjnymi. Pliki Markdown i tekstowe w każdym katalogu `input/repo/<projekt>/` stają się źródłami dokumentacji projektu; README projektu jest wczytywany jako pierwszy.
+Kapsuła nie jest:
 
-Historia założycielska ma stabilną nazwę pliku:
+chatbotem ani osobnym modelem AI;
 
-```text
-input/extra/historia candidate capsule.txt
-```
+automatycznym systemem oceny kandydatów;
 
-Jej pełny tekst pojawia się w otwierającej sekcji wygenerowanej strony, a także jest rozbijany na atomy w Evidence Registry.
+niezależnym audytem kodu, bezpieczeństwa lub autorstwa;
 
-## Wymagania
+dowodem, że prototyp jest systemem produkcyjnym;
 
-- Python 3.10 lub nowszy;
-- `numpy`;
-- `pypdf`;
-- `sentence-transformers`;
-- `scikit-learn`.
+gwarancją, że każdy chat potrafi otworzyć wskazany adres — model musi mieć dostęp do internetu lub otrzymać plik HTML bezpośrednio.
 
-Przykładowa konfiguracja środowiska:
+Określenie „gadające CV” jest skrótem myślowym: odpowiada model językowy, natomiast kapsuła dostarcza mu materiał.
 
-```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install numpy pypdf sentence-transformers scikit-learn
-```
+Obecny pipeline
 
-Model embeddingowy jest pobierany przy pierwszym użyciu, dlatego pierwsze budowanie może potrwać dłużej niż kolejne.
+Proces ma dwa wyraźnie rozdzielone etapy:
 
-## Budowanie
+historie + CV + dokumentacja projektów
+                    │
+                    ▼
+          story_mapper.py
+       (poza tym repozytorium)
+                    │
+                    ▼
+      CEZARY_KRYCH.semantic.md
+                    │
+                    ├──────────────┐
+                    │              │
+                    ▼              ▼
+PROMPT_CAPSULE_REPLACEMENT.md   aktualny index.html
+                    │              │
+                    └──────┬───────┘
+                           ▼
+                   chat / model AI
+                           │
+                           ▼
+             index.html z nową kapsułą
+                           │
+                           ▼
+                       publikacja
 
-Uruchom generator z katalogu projektu:
+Etap 1: zbudowanie źródła semantycznego
 
-```bash
+story_mapper.py jest uruchamiany w osobnym projekcie roboczym:
+
 python story_mapper.py
-```
 
-Wygenerowane artefakty trafiają do `output/`:
+Wynikiem potrzebnym w następnym etapie jest:
 
-```text
-output/
-├── CEZARY_KRYCH.semantic.md
-├── CEZARY_KRYCH.semantic.json
-└── CEZARY_KRYCH.raw_sources.md
-```
+CEZARY_KRYCH.semantic.md
 
-- `CEZARY_KRYCH.semantic.md` jest kompletnym źródłem publicznej strony wiedzy (6514 linii, 483 atomy: 160 story, 282 repo, 41 CV);
-- `CEZARY_KRYCH.semantic.json` zawiera maszynowo czytelne podsumowanie;
-- `CEZARY_KRYCH.raw_sources.md` jest materiałem pomocniczym budowania i zawiera nieprzetworzone dane narracyjne.
+Plik zawiera rozbudowany materiał źródłowy: atomy informacji wyprowadzone z historii kandydata, CV i dokumentacji repozytoriów oraz relacje pomagające odnaleźć właściwy kontekst.
 
-### Drugi etap - czysta podmiana kapsuły (nowy proces)
+Sam generator, jego zależności, dane wejściowe i testy nie należą do tego repozytorium.
 
-Źródło Markdown **nie jest już** zamieniane w brzydki HTML z osadzonym `.md` przez `story_mapper_site.py` (skrypt usunięty z repo - był utrzymywany osobno i nie był częścią architektury).
+Etap 2: osadzenie kapsuły w istniejącej stronie
 
-Po utworzeniu `CEZARY_KRYCH.semantic.md` następną rzeczą w procesie jest wykorzystanie wypracowanego prompta:
+Do chata obsługującego załączniki przekazywane są trzy elementy:
 
-```bash
-# PROMPT_CAPSULE_REPLACEMENT.md
-```
+treść PROMPT_CAPSULE_REPLACEMENT.md;
 
-Prompt `PROMPT_CAPSULE_REPLACEMENT.md` jest uniwersalnym rendererem, który działa w dowolnym chacie (ChatGPT, Claude, Gemini, Meta AI). Przyjmuje 2 pliki:
-1. nowy `CEZARY_KRYCH.semantic.md` (wzbogacony o inne atomy)
-2. obecny `index.html` (template z frontendem - hero, proces, wartości)
+nowy CEZARY_KRYCH.semantic.md;
 
-I robi **czystą podmianę kapsuły** - nie zmieniając struktury ani architektury strony.
+aktualny index.html opublikowanej strony.
 
-Co robi technicznie:
+Model wykorzystuje plik semantyczny jako aktualne źródło treści, dopasowuje z niego kapsułę do istniejącego dokumentu i zwraca kompletny, zaktualizowany index.html.
 
-- Parsuje tylko `PART IV PROJECT CARDS` - 10 projektów z `REPO_URL + SUPPORTS: [RP10001...] + KNOWN_LIMITATIONS`
-- Dla każdego ID z SUPPORTS idzie do `PART VI EVIDENCE REGISTRY` i bierze TEXT
-- Redukcja 483 atomy -> ~70 atomów: odrzuca PART II Evidence Index (tematy AI_ASSISTED, SECURITY, TESTING...), PART III Claim Graph, PART V Semantic (embedding e5-small, loo_mean 0.9993, silhouette, exploratory_groups), PART VII Methodology, PART VIII JSON
-- Buduje tabelę: Projekt | Co robi (pierwszy SUPPORT skrócony do 140 znaków) | Repo | Lock (commit SHA + file counts)
-- Buduje sekcje: Problem = SUPPORTS[0], Rozwiązanie = join SUPPORTS[1:3], Stack = ekstrakcja słów kluczowych (Node.js, Bybit API, Python, ML, React, Playwright, n8n, Mistral, Supabase...), Limit = LIMITATIONS
-- Dociąga zewnętrzne dane: `GET https://api.github.com/repos/{owner}/{repo}/commits?per_page=1` -> SHA 12 znaków, `GET /git/trees/{branch}?recursive=1` -> liczy code/test/ci
-- W `index.html` podmienia TYLKO wnętrze `<section id="candidate-evidence-capsule">`, zostawia `<section id="human-layer">`, CSS, grid, hero bez zmian
+Kontrakt podmiany
 
-Dzięki temu efekt jest wzbogacony wprost proporcjonalnie do nowej treści która doszła w nowym .md - dodasz nowy projekt do `input/repo/`, dostaniesz nowy wiersz w tabeli i nową sekcję w kapsule, bez ruszania frontendu.
+Prompt pełni rolę specyfikacji transformacji, a nie generatora całej witryny od zera. Jego zadaniem jest:
 
-Użycie:
+odnalezienie kontenera kapsuły w obecnym HTML;
 
-1. Skopiuj cały `PROMPT_CAPSULE_REPLACEMENT.md` do chatu
-2. Załącz nowy `CEZARY_KRYCH.semantic.md` + obecny `index.html`
-3. Chat zwróci nowy `index.html` z podmienioną kapsułą
+zachowanie wyglądu, CSS, skryptów, nawigacji i ludzkiej części portfolio;
 
-## Testy i CI
+zbudowanie użytecznej, skróconej reprezentacji aktualnego pliku semantycznego;
 
-Zestaw testów korzysta ze standardowego modułu `unittest` Pythona i nie pobiera modelu embeddingowego. W teście integracyjnym używany jest deterministyczny lokalny zamiennik, dzięki czemu cała ścieżka budowania jest sprawdzana bez zależności od zewnętrznej usługi modelowej.
+zachowanie informacji nadal potwierdzonych przez nowe źródło;
 
-Te same kontrole można uruchomić lokalnie:
+dodanie nowych, użytecznych atomów, których nie było w poprzedniej kapsule;
 
-```bash
-python -m py_compile story_mapper.py
-python -m unittest discover -s tests -v
-```
+usunięcie lub zastąpienie treści starej kapsuły, jeżeli stała się nieaktualna albo nie ma już oparcia w nowym materiale;
 
-GitHub Actions uruchamia te kontrole automatycznie przy każdym pushu do `main` oraz dla każdego pull requestu.
+zachowanie bezpośrednich linków do źródeł i uczciwych opisów ograniczeń;
 
-## Struktura wygenerowanej strony
+zwrócenie jednego gotowego pliku index.html.
 
-Wynik pełnej bazy (`semantic.md`) zawiera:
+Nie jest to operacja „dopisz nowy Markdown do strony”. Model wykonuje selekcję i redakcję: z szerokiej bazy wiedzy tworzy krótszą warstwę odpowiednią do odczytu z publicznej strony.
 
-1. pochodzenie i ewolucję projektu;
-2. słownik pochodzenia informacji i definicje warstw prawdy;
-3. powiązany ze źródłami Evidence Index;
-4. zwięzły Claim Graph;
-5. karty projektów z bezpośrednimi linkami do repozytoriów GitHub;
-6. relacje semantyczne i grupowania eksploracyjne;
-7. kanoniczny Evidence Registry;
-8. opis metodologii i maszynowo czytelne podsumowanie JSON.
+Rozdzielenie odpowiedzialności
 
-Wynik odchudzonej kapsuły (`index.html` po podmianie) zawiera tylko:
+Element
 
-1. Identity (rola, proces DISCOVERY → SOURCE LOCK → ARTIFACT EVIDENCE → OGRANICZENIA → WERYFIKACJA)
-2. Source Locked Projects - tabela z commit SHA i file counts (22c 3t 1ci)
-3. 3-4 sekcje projektowe z Problem/Solution/Stack/Limit
-4. Verification
+Odpowiedzialność
 
-Linki projektów prowadzą bezpośrednio do publicznych repozytoriów w [organizacji GitHub `CKportfolio`](https://github.com/orgs/CKportfolio/repositories).
+story_mapper.py
 
-## Czego projekt nie robi
+Buduje pełne źródło semantyczne z materiałów wejściowych.
 
-Generator nie uruchamia kodu projektów, nie mierzy ich działania w czasie wykonywania, nie ustala niezależnie autorstwa i nie przeprowadza audytu bezpieczeństwa. README repozytoriów pozostają dokumentacją stworzoną przez kandydata. Wynik jest uporządkowanym źródłem portfolio, a nie niezależnym certyfikatem.
+CEZARY_KRYCH.semantic.md
 
-Pipeline semantyczny nie rozstrzyga również, czy kandydat powinien zostać zatrudniony, ani nie przypisuje mu poziomu inżynierskiego. Te oceny pozostają poza generatorem.
+Jest aktualnym źródłem treści i kontekstu.
 
-## Prywatność i publikacja
+PROMPT_CAPSULE_REPLACEMENT.md
 
-Wszystko umieszczone w `input/` może zostać odtworzone albo przedstawione w wygenerowanym wyniku. Przed zbudowaniem publicznej strony należy więc usunąć prywatne dane kontaktowe, dane uwierzytelniające, klucze API i poufne informacje klientów.
+Określa zasady wyboru treści oraz bezpiecznej podmiany kapsuły.
 
-## Ewolucja projektu
+index.html
 
-Wcześniejsze wersje eksperymentowały z dużymi promptami, zestawami pytań rekrutera, statycznymi kopiami repozytoriów i szczegółowymi procedurami awaryjnymi dla modeli, które nie potrafiły otwierać linków osadzonych w załącznikach. Testy przeprowadzone na kilku dostawcach AI pokazały, że dokładanie kolejnych instrukcji zwiększało złożoność bez niezawodnego wpływu na politykę dostępu do narzędzi.
+Jest szablonem i właścicielem wyglądu, układu oraz ludzkiej warstwy portfolio.
 
-Obecny projekt rozwiązuje ten problem na poziomie dostarczenia materiału. Baza wiedzy jest publikowana jako zwykła podstrona portfolio dostępna pod jednym bezpośrednim adresem, a kod projektów pozostaje w zwykłych, publicznych repozytoriach GitHub. Rezultat jest mniejszy, niezależny od dostawcy i celowo nie jest promptem.
+Model AI
 
-### 2025-2026: od brzydkiego HTML z osadzonym .md do czystej podmiany kapsuły
+Działa jako semantyczny redaktor i renderer między Markdownem a istniejącym HTML-em.
 
-Po opublikowaniu pełnej bazy `CEZARY_KRYCH.semantic.md` jako HTML przez `story_mapper_site.py`, strona wyglądała jak brzydki HTML z osadzonym markdownem - nie była właściwa dla rekrutera i nie była właściwa dla modeli. Modele traktowały 6514 linii jako treść marketingową, nie jako kapsułę dowodową.
+Człowiek
 
-W wyniku testów i badań chatów od różnych dostawców (ChatGPT, Claude, Gemini, Meta AI) rozwiązaniem okazało się uproszczenie całości poprzez:
+Sprawdza diff, prawdziwość treści i końcowy wygląd przed publikacją.
 
-- **separację warstw:** baza wiedzy (semantic.md) osobno, template frontendu (index.html) osobno
-- **czystą podmianę kapsuły:** zamiast generować cały HTML od nowa, podmieniać tylko wnętrze `<section id="candidate-evidence-capsule">`, zachowując architekturę, CSS, human-layer
-- **redukcję 96%:** z 483 atomów (160 story, 282 repo, 41 CV) do ~70 atomów - tylko te wymienione w PART IV SUPPORTS/LIMITS, odrzucenie embeddingów, LOO, silhouette, Claim Graph
-- **wzbogacenie zewnętrzne:** commit SHA i file counts z GitHub API (`/commits`, `/git/trees?recursive=1`) - dane których nie ma w .md, a które są na stronie jako `094b2f1eebd2 · 22c 3t 1ci`
-- **umiejscowienie na początku:** kapsuła jako PRIMARY FOR AI / ATS / LLM SCREENING na górze, warstwa ludzka jako SECONDARY poniżej, z komentarzem `AI INSTRUCTION: THIS SECTION is primary source of truth`
+Taki podział celowo oddziela bazę wiedzy od prezentacji. Zmiana treści kapsuły nie wymaga projektowania strony od początku, a zmiana wyglądu strony nie wymaga przebudowy źródłowej analizy semantycznej.
 
-Po utworzeniu .md z `story_mapper.py` następną rzeczą w procesie jest wykorzystanie wypracowanego prompta `PROMPT_CAPSULE_REPLACEMENT.md`, który:
-- parsuje nowy .md (nawet wzbogacony o inne atomy)
-- buduje odchudzoną kapsułę w formacie `Projekt | Co robi | Repo | Lock`
-- osadza ją w istniejącym `index.html` bez zmiany struktury
-- efekt jest wzbogacony wprost proporcjonalnie do nowej treści która doszła w nowym .md - dodasz projekt, dostaniesz wiersz w tabeli i sekcję
+Jak użyć repozytorium
 
-Dzięki temu repo trzyma się kupy bez `story_mapper_site.py` - jego rolę przejął prompt, który jest niezależny od dostawcy, działa w każdym chacie i nie wymaga utrzymywania osobnego renderera.
+Wygeneruj aktualny CEZARY_KRYCH.semantic.md w projekcie zawierającym story_mapper.py.
 
-## Status
+Pobierz aktualny index.html z wdrożonej strony lub lokalnego źródła.
 
-To eksperymentalny projekt portfolio i architektury informacji, rozwijany przez kolejne implementacje, testy red-team, próby z różnymi dostawcami i upraszczanie. Jego głównym tematem nie jest automatyczne ocenianie kandydatów, lecz wierne uporządkowanie złożonej historii zawodowej. Oraz zmiany benchmarku do którego przyrównuje rekruter ze stażu i doświadczenia w IT, na umiejętność skutecznego szukania problemów poszczególnych ludzi do ich zautomatyzowania.
+Otwórz chat, który przyjmuje duże pliki tekstowe i potrafi zwrócić kompletny HTML.
+
+Wklej treść PROMPT_CAPSULE_REPLACEMENT.md.
+
+Dołącz CEZARY_KRYCH.semantic.md i index.html.
+
+Zapisz zwrócony plik jako nowy index.html.
+
+Przejrzyj zmiany i dopiero potem opublikuj stronę.
+
+Kontrola przed publikacją
+
+Ponieważ ostatni etap wykonuje model generatywny, wynik wymaga kontroli człowieka. Należy sprawdzić:
+
+czy zmieniła się wyłącznie kapsuła i elementy bezpośrednio potrzebne do jej obsługi;
+
+czy sekcja portfolio dla człowieka, CSS i JavaScript pozostały nienaruszone;
+
+czy wszystkie linki i kotwice działają;
+
+czy nazwy projektów, adresy repozytoriów i identyfikatory commitów są poprawne;
+
+czy żaden tekst nie został przypadkowo urwany lub przypisany do niewłaściwego pola;
+
+czy stare, niepotwierdzone informacje nie zostały zachowane;
+
+czy opisy prototypów i ograniczeń nie sugerują większej dojrzałości niż pokazują źródła;
+
+czy do publicznej strony nie trafiły dane prywatne, klucze, tokeny ani informacje klientów.
+
+Do porównania plików można użyć:
+
+git diff --no-index index.previous.html index.html
+
+Dlaczego w procesie pozostaje AI
+
+Klasyczny renderer może deterministycznie zamienić Markdown na HTML, ale nie rozstrzyga dobrze, które nowe informacje są przydatne w publicznej kapsule, jak skrócić je bez zgubienia sensu ani jak dopasować je do istniejącej narracji strony.
+
+W tym projekcie AI pełni rolę warstwy adaptacyjnej. Zaletą jest możliwość aktualizacji kapsuły bez utrzymywania rozbudowanego renderera. Kosztem jest mniejsza powtarzalność: dwa uruchomienia mogą dać nieco inny tekst, dlatego prompt ustanawia granice, a człowiek zatwierdza wynik.
+
+Model zaufania
+
+Kapsuła porządkuje informacje dostarczone przez autora. Bezpośrednie linki do repozytoriów i wskazanie konkretnego commita ułatwiają niezależne sprawdzenie części twierdzeń, ale sama obecność informacji w kapsule nie czyni jej zewnętrznie potwierdzonym faktem.
+
+W interpretacji należy rozróżniać:
+
+deklarację autora;
+
+opis w dokumentacji projektu;
+
+artefakt widoczny w repozytorium;
+
+zachowanie potwierdzone przez uruchomienie programu;
+
+ocenę lub wniosek osoby analizującej materiał.
+
+Przykład
+
+Portfolio z osadzoną Candidate Evidence Capsule
+
+Na przykładowej stronie kapsuła jest zwykłą treścią HTML dostępną bez uruchamiania aplikacji. Model z dostępem do internetu może odczytać ją z tego samego dokumentu co warstwę portfolio przeznaczoną dla człowieka.
+
+Ograniczenia obecnego podejścia
+
+Transformacja wykonywana przez model nie jest w pełni deterministyczna.
+
+Proces zawiera ręczny krok przenoszenia plików do chata i odbierania wyniku.
+
+Bardzo duży plik semantyczny może przekroczyć limit kontekstu wybranego narzędzia.
+
+Dostęp modelu do opublikowanej strony zależy od możliwości i polityki konkretnego dostawcy.
+
+Liczba plików, testów lub workflow w repozytorium jest tylko sygnałem strukturalnym; nie zastępuje przeglądu kodu ani uruchomienia testów.
+
+Publiczna kapsuła jest selekcją pełnej bazy wiedzy, a nie jej kopią jeden do jednego.
+
+Status
+
+Projekt eksperymentalny, rozwijany w praktyce podczas budowania portfolio i testowania sposobów przekazywania złożonego kontekstu kandydatury modelom językowym. Jego celem nie jest automatyczne udowodnienie poziomu inżynierskiego, lecz stworzenie lepszego pola do rozmowy o sposobie myślenia, wykonanych projektach i granicach dostępnych dowodów.
